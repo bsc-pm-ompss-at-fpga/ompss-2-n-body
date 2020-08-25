@@ -12,12 +12,3 @@ For example, protein folding is studied using N-body simulation to calculate
 electrostatic and van der Waals forces. Turbulent fluid flow simulation and
 global illumination computation in computer graphics are other examples of
 problems that use N-body simulation.
-
-## Available versions and building instructions
-
-TODO
-
-## Execution instructions
-
-TODO
-
