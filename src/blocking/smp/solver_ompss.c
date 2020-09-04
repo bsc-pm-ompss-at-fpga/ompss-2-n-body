@@ -16,18 +16,18 @@ static void update_particles_block(particles_block_t *particles, forces_block_t 
 void nbody_solve(nbody_t *nbody, const int num_blocks, const int timesteps, const float time_interval)
 {
 	assert(nbody != NULL);
-	
+
 	particles_block_t *particles = nbody->particles;
 	forces_block_t *forces = nbody->forces;
-	
+
 	for (int t = 0; t < timesteps; t++) {
 		#pragma oss task weakin(particles[0;num_blocks]) weakinout(forces[0;num_blocks]) label("calculate_forces")
 		calculate_forces(forces, particles, num_blocks);
-		
+
 		#pragma oss task weakinout(particles[0;num_blocks], forces[0;num_blocks]) label("update_particles")
 		update_particles(particles, forces, num_blocks, time_interval);
 	}
-	
+
 	#pragma oss taskwait
 }
 
@@ -69,18 +69,18 @@ static void calculate_forces_block(forces_block_t *forces, const particles_block
 	float *x = forces->x;
 	float *y = forces->y;
 	float *z = forces->z;
-	
+
 	const int same_block = (block1 == block2);
 	const float *pos_x1 = block1->position_x;
 	const float *pos_y1 = block1->position_y;
 	const float *pos_z1 = block1->position_z;
 	const float *mass1  = block1->mass ;
-	
+
 	const float *pos_x2 = block2->position_x;
 	const float *pos_y2 = block2->position_y;
 	const float *pos_z2 = block2->position_z;
 	const float *mass2  = block2->mass;
-	
+
 	#pragma oss task for
 	for (int i = 0; i < BLOCK_SIZE; i++) {
 		float fx = x[i], fy = y[i], fz = z[i];
@@ -88,10 +88,10 @@ static void calculate_forces_block(forces_block_t *forces, const particles_block
 			const float diff_x = pos_x2[j] - pos_x1[i];
 			const float diff_y = pos_y2[j] - pos_y1[i];
 			const float diff_z = pos_z2[j] - pos_z1[i];
-			
+
 			const float distance_squared = diff_x * diff_x + diff_y * diff_y + diff_z * diff_z;
 			const float distance = sqrtf(distance_squared);
-			
+
 			float force = 0.0f;
 			if (!same_block || distance_squared != 0.0f) {
 				force = (mass1[i] / (distance_squared * distance)) * (mass2[j] * gravitational_constant);
@@ -117,17 +117,17 @@ void update_particles_block(particles_block_t *particles, forces_block_t *forces
 		const float position_x = particles->position_x[e];
 		const float position_y = particles->position_y[e];
 		const float position_z = particles->position_z[e];
-		
+
 		const float time_by_mass       = time_interval / mass;
 		const float half_time_interval = 0.5f * time_interval;
-		
+
 		const float velocity_change_x = forces->x[e] * time_by_mass;
 		const float velocity_change_y = forces->y[e] * time_by_mass;
 		const float velocity_change_z = forces->z[e] * time_by_mass;
 		const float position_change_x = velocity_x + velocity_change_x * half_time_interval;
 		const float position_change_y = velocity_y + velocity_change_y * half_time_interval;
 		const float position_change_z = velocity_z + velocity_change_z * half_time_interval;
-		
+
 		particles->velocity_x[e] = velocity_x + velocity_change_x;
 		particles->velocity_y[e] = velocity_y + velocity_change_y;
 		particles->velocity_z[e] = velocity_z + velocity_change_z;
@@ -135,16 +135,17 @@ void update_particles_block(particles_block_t *particles, forces_block_t *forces
 		particles->position_y[e] = position_y + position_change_y;
 		particles->position_z[e] = position_z + position_change_z;
 	}
-	
+
 	memset(forces, 0, sizeof(forces_block_t));
 }
 
 void nbody_stats(const nbody_t *nbody, const nbody_conf_t *conf, double time)
 {
 	int particles = nbody->num_blocks * BLOCK_SIZE;
-	printf("bigo, %s, threads, %d, timesteps, %d, total_particles, %d, block_size, %d, blocks, %d, time, %e, performance, %e\n",
+	printf("time %e\n", time);
+	printf("bigo, %s, threads, %d, timesteps, %d, total_particles, %d, block_size, %d, blocks, %d, performance, %e\n",
 			TOSTRING(BIGO), nanos6_get_num_cpus(), nbody->timesteps, particles, BLOCK_SIZE,
-			nbody->num_blocks, time, nbody_compute_throughput(particles, nbody->timesteps, time)
+			nbody->num_blocks, nbody_compute_throughput(particles, nbody->timesteps, time)
 	);
 }
 
