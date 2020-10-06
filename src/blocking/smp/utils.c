@@ -30,7 +30,7 @@ void nbody_generate_particles(const nbody_conf_t *conf, const nbody_file_t *file
 		mkdir("data", 0755);
 	}
 	
-	const int fd = open(fname, O_RDWR|O_CREAT|O_TRUNC, S_IRUSR|S_IRGRP|S_IROTH);
+	const int fd = open(fname, O_RDWR|O_CREAT|O_TRUNC, 0644);
 	assert(fd >= 0);
 	
 	const int size = file->size;
@@ -144,7 +144,7 @@ void nbody_save_particles(const nbody_t *nbody)
 	char fname[1024];
 	sprintf(fname, "%s.out", nbody->file.name);
 	
-	const int fd = open(fname, O_RDWR|O_CREAT|O_TRUNC, S_IWUSR|S_IRUSR|S_IRGRP|S_IROTH);
+	const int fd = open(fname, O_RDWR|O_CREAT|O_TRUNC, 0644);
 	assert(fd >= 0);
 	
 	const int size = nbody->file.size;
