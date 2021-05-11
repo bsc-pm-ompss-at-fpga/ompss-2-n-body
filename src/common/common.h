@@ -1,3 +1,10 @@
+//
+// This file is part of NBody and is licensed under the terms contained
+// in the LICENSE file.
+//
+// Copyright (C) 2021 Barcelona Supercomputing Center (BSC)
+//
+
 #ifndef COMMON_H
 #define COMMON_H
 

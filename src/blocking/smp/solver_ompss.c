@@ -1,3 +1,10 @@
+//
+// This file is part of NBody and is licensed under the terms contained
+// in the LICENSE file.
+//
+// Copyright (C) 2021 Barcelona Supercomputing Center (BSC)
+//
+
 #include "blocking/smp/nbody.h"
 
 #include <assert.h>
