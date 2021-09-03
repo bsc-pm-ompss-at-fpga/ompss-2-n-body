@@ -38,8 +38,9 @@ void nbody_print_usage(int argc, char **argv)
 	fprintf(stderr, "  -h, --help\t\t\t\tdisplay this help and exit\n\n");
 }
 
-nbody_conf_t nbody_get_conf(int argc, char **argv)
+nbody_conf_t nbody_get_conf(int *ok, int argc, char **argv)
 {
+	*ok = 1;
 	nbody_conf_t conf;
 	conf.domain_size_x    = default_domain_size_x;
 	conf.domain_size_y    = default_domain_size_y;
@@ -104,7 +105,8 @@ nbody_conf_t nbody_get_conf(int argc, char **argv)
 	
 	if (!conf.num_particles || !conf.timesteps) {
 		nbody_print_usage(argc, argv);
-		exit(1);
+		//exit(1);
+		*ok = 0;
 	}
 	
 	return conf;

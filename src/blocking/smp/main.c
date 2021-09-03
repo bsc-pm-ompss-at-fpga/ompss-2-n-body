@@ -16,7 +16,11 @@
 
 int main(int argc, char** argv)
 {
-	nbody_conf_t conf = nbody_get_conf(argc, argv);
+	int ok;
+	nbody_conf_t conf = nbody_get_conf(&ok, argc, argv);
+	if (!ok) {
+		return 1;
+	}
 	
 	conf.num_particles = ROUNDUP(conf.num_particles, MIN_PARTICLES);
 	assert(conf.num_particles >= BLOCK_SIZE);
@@ -27,8 +31,11 @@ int main(int argc, char** argv)
 	
 	nbody_t nbody = nbody_setup(&conf);
 	
+	particles_block_t *particles = nbody.particles;
+	forces_block_t *forces = nbody.forces;
+
 	double start = get_time();
-	nbody_solve(&nbody, conf.num_blocks, conf.timesteps, conf.time_interval);
+	nbody_solve((float*)particles, (float*)forces, conf.num_blocks, conf.timesteps, conf.time_interval);
 	double end = get_time();
 	
 	nbody_stats(&nbody, &conf, end - start);
