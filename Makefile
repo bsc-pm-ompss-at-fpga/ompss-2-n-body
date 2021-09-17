@@ -33,15 +33,15 @@ endif
 SMP_SOURCES=                           \
     src/common/common.c                \
     src/blocking/common/common_utils.c \
-    src/blocking/smp/utils.c           \
-    src/blocking/smp/main.c
+    src/blocking/fpga/utils.c          \
+    src/blocking/fpga/main.c
 
 PROGS=                                \
     nbody_ompss.$(BIGO).$(BS).exe
 
 all: $(PROGS)
 
-nbody_ompss.$(BIGO).$(BS).exe: $(SMP_SOURCES) src/blocking/smp/solver_ompss.c
+nbody_ompss.$(BIGO).$(BS).exe: $(SMP_SOURCES) src/blocking/fpga/solver_ompss.c
 	$(MCC) $(CPPFLAGS) $(MCCFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:

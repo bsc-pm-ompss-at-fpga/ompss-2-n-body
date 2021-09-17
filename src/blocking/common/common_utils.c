@@ -40,12 +40,18 @@ int nbody_compare_particles(const particles_block_t *local, const particles_bloc
 					         fabs(((local[i].position_y[e] - reference[i].position_y[e])*100.0) / reference[i].position_y[e]) +
 					         fabs(((local[i].position_z[e] - reference[i].position_z[e])*100.0) / reference[i].position_z[e]);
 					count++;
+					/*if (count <= 100)
+						printf("block %d pos %d: expected (%f %f %f) found (%f %f %f)\n", i, e,
+							reference[i].position_x[e], reference[i].position_y[e], reference[i].position_z[e],
+							local[i].position_x[e], local[i].position_y[e], local[i].position_z[e]);*/
+
 			}
 		}
 	}
 	
 	double relative_error = (count != 0) ? error / (3.0 * count) : 0.0;
-	if ((count * 100.0) / (num_blocks * BLOCK_SIZE) > 0.6 || relative_error > TOLERATED_ERROR) {
+	printf("count %d, relative error %e\n", count, relative_error);
+	if ((count * 100.0) / (num_blocks * BLOCK_SIZE) > 60 || relative_error > TOLERATED_ERROR) {
 		return 0;
 	}
 	return 1;

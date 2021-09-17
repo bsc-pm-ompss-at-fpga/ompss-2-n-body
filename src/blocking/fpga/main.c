@@ -5,7 +5,7 @@
 // Copyright (C) 2021 Barcelona Supercomputing Center (BSC)
 //
 
-#include "blocking/smp/nbody.h"
+#include "blocking/fpga/nbody.h"
 
 #include <assert.h>
 #include <stdio.h>

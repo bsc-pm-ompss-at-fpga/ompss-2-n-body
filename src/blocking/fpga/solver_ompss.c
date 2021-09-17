@@ -5,7 +5,7 @@
 // Copyright (C) 2021 Barcelona Supercomputing Center (BSC)
 //
 
-#include "blocking/smp/nbody.h"
+#include "blocking/fpga/nbody.h"
 
 #include <assert.h>
 #include <math.h>
@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include <nanos6/debug.h>
+#include <nanos6/devices.h>
 
 static void calculate_forces(float *forces, const float *particles, const int num_blocks);
 static void update_particles(float *particles, float *forces, const int num_blocks, const float time_interval);
@@ -34,12 +35,14 @@ void nbody_solve(float *particles, float *forces, const int num_blocks, const in
 
 void calculate_forces_N2(float *forces, const float *particles, const int num_blocks)
 {
+	int devices = nanos6_get_device_num(nanos6_fpga_device);
 	for (int i = 0; i < num_blocks; i++) {
 		for (int j = 0; j < num_blocks; j++) {
 			float * forcesTarget = forces + j*FORCE_FPGABLOCK_SIZE;
 			const float * block1 = particles + j*PARTICLES_FPGABLOCK_SIZE;
 			const float * block2 = particles + i*PARTICLES_FPGABLOCK_SIZE;
 
+			#pragma oss taskcall affinity(j%devices)
 			calculate_forces_block(
 				forcesTarget + FORCE_FPGABLOCK_X_OFFSET, forcesTarget + FORCE_FPGABLOCK_Y_OFFSET,
 				forcesTarget + FORCE_FPGABLOCK_Z_OFFSET, block1 + PARTICLES_FPGABLOCK_POS_X_OFFSET,
@@ -53,7 +56,9 @@ void calculate_forces_N2(float *forces, const float *particles, const int num_bl
 
 void update_particles(float *particles, float *forces, const int num_blocks, const float time_interval)
 {
+	int devices = nanos6_get_device_num(nanos6_fpga_device);
 	for (int i = 0; i < num_blocks; i++) {
+		#pragma oss taskcall affinity(i%devices)
 		update_particles_block(particles+i*PARTICLES_FPGABLOCK_SIZE, forces+i*FORCE_FPGABLOCK_SIZE, time_interval);
 	}
 }
@@ -151,8 +156,8 @@ void update_particles_block(float *particles, float *forces, const float time_in
 void nbody_stats(const nbody_t *nbody, const nbody_conf_t *conf, double time)
 {
 	int particles = nbody->num_blocks * BLOCK_SIZE;
-	printf("time %e\n", time);
-	printf("bigo, %s, threads, %d, timesteps, %d, total_particles, %d, block_size, %d, blocks, %d, performance, %e\n",
+	printf("time %f\n", time);
+	printf("bigo, %s, threads, %d, timesteps, %d, total_particles, %d, block_size, %d, blocks, %d, performance, %f\n",
 			TOSTRING(BIGO), nanos6_get_num_cpus(), nbody->timesteps, particles, BLOCK_SIZE,
 			nbody->num_blocks, nbody_compute_throughput(particles, nbody->timesteps, time)
 	);

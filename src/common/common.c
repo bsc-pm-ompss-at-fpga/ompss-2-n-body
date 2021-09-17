@@ -122,7 +122,7 @@ double nbody_compute_throughput(int num_particles, int timesteps, double elapsed
 #elif defined(_BIGO_N)
 	interactions_per_timestep = (double)(num_particles);
 #endif
-	return (((interactions_per_timestep * (double)timesteps) / elapsed_time) / 1000000.0);
+	return (((interactions_per_timestep * (double)timesteps) / elapsed_time) / 1000000000.0);
 }
 
 double get_time()
