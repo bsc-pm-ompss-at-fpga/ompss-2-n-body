@@ -156,10 +156,15 @@ void update_particles_block(float *particles, float *forces, const float time_in
 void nbody_stats(const nbody_t *nbody, const nbody_conf_t *conf, double time)
 {
 	int particles = nbody->num_blocks * BLOCK_SIZE;
-	printf("time %f\n", time);
-	printf("bigo, %s, threads, %d, timesteps, %d, total_particles, %d, block_size, %d, blocks, %d, performance, %f\n",
-			TOSTRING(BIGO), nanos6_get_num_cpus(), nbody->timesteps, particles, BLOCK_SIZE,
-			nbody->num_blocks, nbody_compute_throughput(particles, nbody->timesteps, time)
-	);
+	if (conf->parse) {
+		printf("%e\n", time);
+	}
+	else {
+		printf("time %f\n", time);
+		printf("bigo, %s, threads, %d, timesteps, %d, total_particles, %d, block_size, %d, blocks, %d, performance, %f\n",
+				TOSTRING(BIGO), nanos6_get_num_cpus(), nbody->timesteps, particles, BLOCK_SIZE,
+				nbody->num_blocks, nbody_compute_throughput(particles, nbody->timesteps, time)
+		);
+	}
 }
 

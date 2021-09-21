@@ -35,6 +35,7 @@ void nbody_print_usage(int argc, char **argv)
 	fprintf(stderr, "  -C, --no-check\t\t\tdo not check the correctness of the result\n");
 	fprintf(stderr, "  -o, --output\t\t\t\tsave the computed particles to the default output file (disabled by default)\n");
 	fprintf(stderr, "  -O, --no-output\t\t\tdo not save the computed particles to the default output file\n");
+	fprintf(stderr, "  -P, --parse\t\t\t\tdisplay only the time in seconds\n");
 	fprintf(stderr, "  -h, --help\t\t\t\tdisplay this help and exit\n\n");
 }
 
@@ -55,6 +56,7 @@ nbody_conf_t nbody_get_conf(int *ok, int argc, char **argv)
 	conf.save_result      = default_save_result;
 	conf.check_result     = default_check_result;
 	conf.force_generation = default_force_generation;
+	conf.parse            = 0;
 	
 	static struct option long_options[] = {
 		{"particles",	required_argument,	0, 'p'},
@@ -64,13 +66,14 @@ nbody_conf_t nbody_get_conf(int *ok, int argc, char **argv)
 		{"no-check",	no_argument,		0, 'C'},
 		{"output",		no_argument,		0, 'o'},
 		{"no-output",	no_argument,		0, 'O'},
+		{"parse", no_argument, 0, 'P'},
 		{"help",		no_argument,		0, 'h'},
 		{0, 0, 0, 0}
 	};
 	
 	int c;
 	int index;
-	while ((c = getopt_long(argc, argv, "hfoOcCp:t:", long_options, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hfoOcCPp:t:", long_options, &index)) != -1) {
 		switch (c) {
 			case 'h':
 				nbody_print_usage(argc, argv);
@@ -90,6 +93,9 @@ nbody_conf_t nbody_get_conf(int *ok, int argc, char **argv)
 			case 'C':
 				conf.check_result = 0;
 				break;
+			case 'P':
+				conf.parse = 1;
+				break;
 			case 'p':
 				conf.num_particles = atoi(optarg);
 				break;
@@ -97,9 +103,9 @@ nbody_conf_t nbody_get_conf(int *ok, int argc, char **argv)
 				conf.timesteps = atoi(optarg);
 				break;
 			case '?':
-				exit(1);
+				*ok = 0;
 			default:
-				abort();
+				*ok = 0;
 		}
 	}
 	
