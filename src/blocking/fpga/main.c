@@ -13,12 +13,23 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <nanos6/devices.h>
 
 int main(int argc, char** argv)
 {
 	int ok;
 	nbody_conf_t conf = nbody_get_conf(&ok, argc, argv);
 	if (!ok) {
+		return 1;
+	}
+
+	int devices = nanos6_get_device_num(nanos6_fpga_device);
+	if (devices <= 0) {
+		fprintf(stderr, "Invalid number of devices %d\n", devices);
+		return 1;
+	}
+	if (conf.num_particles%(BLOCK_SIZE*devices) != 0) {
+		fprintf(stderr, "Number of particles not multiple of block size and number of devices\n");
 		return 1;
 	}
 	
