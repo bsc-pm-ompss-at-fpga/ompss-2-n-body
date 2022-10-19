@@ -13,8 +13,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <nanos6/devices.h>
-
 int main(int argc, char** argv)
 {
 	int ok;
@@ -23,12 +21,7 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	int devices = nanos6_get_device_num(nanos6_fpga_device);
-	if (devices <= 0) {
-		fprintf(stderr, "Invalid number of devices %d\n", devices);
-		return 1;
-	}
-	if (conf.num_particles%(BLOCK_SIZE*devices) != 0) {
+	if (conf.num_particles%BLOCK_SIZE != 0) {
 		fprintf(stderr, "Number of particles not multiple of block size and number of devices\n");
 		return 1;
 	}
@@ -47,6 +40,7 @@ int main(int argc, char** argv)
 
 	double start = get_time();
 	nbody_solve((float*)particles, (float*)forces, conf.num_blocks, conf.timesteps, conf.time_interval);
+	#pragma oss taskwait
 	double end = get_time();
 	
 	nbody_stats(&nbody, &conf, end - start);

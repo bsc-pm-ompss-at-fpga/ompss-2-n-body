@@ -6,6 +6,7 @@
 //
 
 #include "blocking/fpga/nbody.h"
+#include "blocking/fpga/nbody.fpga.h"
 
 #include <assert.h>
 #include <math.h>
@@ -14,7 +15,6 @@
 #include <string.h>
 
 #include <nanos6/debug.h>
-#include <nanos6/devices.h>
 
 static void calculate_forces(float *forces, const float *particles, const int num_blocks);
 static void update_particles(float *particles, float *forces, const int num_blocks, const float time_interval);
@@ -35,14 +35,13 @@ void nbody_solve(float *particles, float *forces, const int num_blocks, const in
 
 void calculate_forces_N2(float *forces, const float *particles, const int num_blocks)
 {
-	int devices = nanos6_get_device_num(nanos6_fpga_device);
+#pragma HLS inline
 	for (int i = 0; i < num_blocks; i++) {
 		for (int j = 0; j < num_blocks; j++) {
 			float * forcesTarget = forces + j*FORCE_FPGABLOCK_SIZE;
 			const float * block1 = particles + j*PARTICLES_FPGABLOCK_SIZE;
 			const float * block2 = particles + i*PARTICLES_FPGABLOCK_SIZE;
 
-			#pragma oss taskcall affinity(j%devices)
 			calculate_forces_block(
 				forcesTarget + FORCE_FPGABLOCK_X_OFFSET, forcesTarget + FORCE_FPGABLOCK_Y_OFFSET,
 				forcesTarget + FORCE_FPGABLOCK_Z_OFFSET, block1 + PARTICLES_FPGABLOCK_POS_X_OFFSET,
@@ -56,18 +55,18 @@ void calculate_forces_N2(float *forces, const float *particles, const int num_bl
 
 void update_particles(float *particles, float *forces, const int num_blocks, const float time_interval)
 {
-	int devices = nanos6_get_device_num(nanos6_fpga_device);
+#pragma HLS inline
 	for (int i = 0; i < num_blocks; i++) {
-		#pragma oss taskcall affinity(i%devices)
 		update_particles_block(particles+i*PARTICLES_FPGABLOCK_SIZE, forces+i*FORCE_FPGABLOCK_SIZE, time_interval);
 	}
 }
 
 #pragma oss task label("calculate_forces_block") \
-	device(fpga) num_instances(FBLOCK_NUM_ACCS) localmem_copies onto(4294967297) \
-	inout([BLOCK_SIZE_C]x, [BLOCK_SIZE_C]y, [BLOCK_SIZE_C]z) \
-	in([BLOCK_SIZE_C]pos_x1, [BLOCK_SIZE_C]pos_y1, [BLOCK_SIZE_C]pos_z1, [BLOCK_SIZE_C]mass1) \
-	in([BLOCK_SIZE_C]pos_x2, [BLOCK_SIZE_C]pos_y2, [BLOCK_SIZE_C]pos_z2, [BLOCK_SIZE_C]weight2)
+	device(fpga) num_instances(FBLOCK_NUM_ACCS) \
+	inout(x[0]) in(pos_x1[0], pos_x2[0]) \
+	copy_inout([BLOCK_SIZE_C]x, [BLOCK_SIZE_C]y, [BLOCK_SIZE_C]z) \
+	copy_in([BLOCK_SIZE_C]pos_x1, [BLOCK_SIZE_C]pos_y1, [BLOCK_SIZE_C]pos_z1, [BLOCK_SIZE_C]mass1) \
+	copy_in([BLOCK_SIZE_C]pos_x2, [BLOCK_SIZE_C]pos_y2, [BLOCK_SIZE_C]pos_z2, [BLOCK_SIZE_C]weight2)
 void calculate_forces_block(float *x, float *y, float *z,
 	const float *pos_x1, const float *pos_y1, const float *pos_z1, const float *mass1,
 	const float *pos_x2, const float *pos_y2, const float *pos_z2, const float *weight2)
@@ -110,9 +109,10 @@ void calculate_forces_block(float *x, float *y, float *z,
 	}
 }
 
-#pragma oss task device(fpga) onto(4294967298) inout([PARTICLES_FPGABLOCK_SIZE]particles, [FORCE_FPGABLOCK_SIZE]forces) label("update_particles_block")
+#pragma oss task device(fpga) copy_deps inout([PARTICLES_FPGABLOCK_SIZE]particles, [FORCE_FPGABLOCK_SIZE]forces) label("update_particles_block")
 void update_particles_block(float *particles, float *forces, const float time_interval)
 {
+#pragma HLS inline
 	for (int e = 0; e < BLOCK_SIZE; e++){
 		//There are 7 loads to the particles array which can't be done in the same cycle
 		#pragma HLS pipeline II=7

@@ -64,6 +64,7 @@ typedef struct nbody_file_t nbody_file_t;
 typedef struct nbody_t nbody_t;
 
 // Solver function
+#pragma oss task device(fpga) inout([num_blocks*sizeof(particles_block_t)]particles, [num_blocks*sizeof(forces_block_t)]forces)
 void nbody_solve(float *particles, float *forces, const int num_blocks, const int timesteps, const float time_interval);
 
 // Auxiliary functions
