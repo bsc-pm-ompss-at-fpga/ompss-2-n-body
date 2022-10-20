@@ -104,8 +104,11 @@ particles_block_t * nbody_load_particles(const nbody_conf_t *conf, const nbody_f
 	const int fd = open(fname, O_RDONLY, 0);
 	assert(fd >= 0);
 	
-	void * const ptr = mmap(NULL, file->size, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
-	assert(ptr != MAP_FAILED);
+	void * const ptr = malloc(file->size);
+	assert(ptr != NULL);
+	
+	ssize_t ret = read(fd, ptr, file->size);
+	assert(ret == file->size);
 	
 	int err = close(fd);
 	assert(!err);
@@ -137,10 +140,9 @@ nbody_t nbody_setup(const nbody_conf_t *conf)
 		nbody_generate_particles(conf, &file);
 		
 		nbody.particles = nbody_load_particles(conf, &file);
-		assert(nbody.particles != NULL);
-		
+
 		nbody.forces = nbody_alloc(conf->num_blocks * sizeof(forces_block_t));
-		assert(nbody.forces != NULL);
+		memset(nbody.forces, 0, conf->num_blocks*sizeof(forces_block_t));
 	}
 	
 	return nbody;
@@ -174,8 +176,7 @@ void nbody_save_particles(const nbody_t *nbody)
 
 void nbody_free(nbody_t *nbody)
 {
-	int err = munmap(nbody->particles, nbody->num_blocks * sizeof(particles_block_t));
-	err |= munmap(nbody->forces, nbody->num_blocks * sizeof(forces_block_t));
-	assert(!err);
+	free(nbody->particles);
+	free(nbody->forces);
 }
 

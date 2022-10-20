@@ -45,7 +45,7 @@ nbody_ompss.$(BIGO).$(BS).exe: $(SMP_SOURCES) src/blocking/fpga/solver_ompss.c
 	$(MCC) $(CPPFLAGS) $(MCCFLAGS) -o $@ $^ $(LDFLAGS)
 
 bitstream-p: $(SMP_SOURCES) src/blocking/fpga/solver_ompss.c
-	$(MCC) $(CPPFLAGS) $(MCCFLAGS) $(FPGA_LINKER_FLAGS_) --bitstream-generation --variable=fpga_memory_port_width:$(FPGA_MEMORY_PORT_WIDTH) -o $(shell mktemp) $^ $(LDFLAGS)
+	$(MCC) $(CPPFLAGS) $(MCCFLAGS) $(FPGA_LINKER_FLAGS_) --bitstream-generation --variable=fpga_memory_port_width:$(FPGA_MEMORY_PORT_WIDTH) --variable=fpga_check_limits_memory_port:0 -o $(shell mktemp) $^ $(LDFLAGS)
 
 clean:
 	rm -f *.o *.exe fpgacc_* *_auto_mcxx.cpp

@@ -18,8 +18,8 @@
 
 void * nbody_alloc(size_t size)
 {
-	void *addr = mmap(NULL, size, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
-	assert(addr != MAP_FAILED);
+	void *addr = malloc(size);
+	assert(addr != NULL);
 	return addr;
 }
 
@@ -30,7 +30,7 @@ void nbody_print_usage(int argc, char **argv)
 	fprintf(stderr, "  -p, --particles=PARTICLES\t\tuse PARTICLES as the total number of particles (default: 16384)\n");
 	fprintf(stderr, "  -t, --timesteps=TIMESTEPS\t\tuse TIMESTEPS as the number of timesteps (default: 10)\n\n");
 	fprintf(stderr, "Optional parameters:\n");
-	fprintf(stderr, "  -f, --force-generation\t\t\t\talways force the generation of particles without the usage of files(disabled by default)\n");
+	fprintf(stderr, "  -f, --force-generation\t\talways force the generation of particles without the usage of files(disabled by default)\n");
 	fprintf(stderr, "  -c, --check\t\t\t\tcheck the correctness of the result (disabled by default)\n");
 	fprintf(stderr, "  -C, --no-check\t\t\tdo not check the correctness of the result\n");
 	fprintf(stderr, "  -o, --output\t\t\t\tsave the computed particles to the default output file (disabled by default)\n");
