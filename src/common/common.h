@@ -65,6 +65,7 @@ typedef struct {
 	int check_result;
 	int force_generation;
 	char parse;
+	char stats_file;
 } nbody_conf_t;
 
 nbody_conf_t nbody_get_conf(int* ok, int argc, char **argv);

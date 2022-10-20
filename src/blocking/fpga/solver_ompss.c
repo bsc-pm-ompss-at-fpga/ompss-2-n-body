@@ -166,5 +166,38 @@ void nbody_stats(const nbody_t *nbody, const nbody_conf_t *conf, double time)
 				nbody->num_blocks, nbody_compute_throughput(particles, nbody->timesteps, time)
 		);
 	}
+	if (conf->stats_file) {
+		double throughput = (double)particles * (double)particles / 1.0E9;
+		throughput = throughput * (double)nbody->timesteps / nbody->timesteps;
+		//Create the JSON result file
+		FILE *res_file = fopen("test_result.json", "w+");
+		if (res_file == NULL) {
+			printf( "Cannot open 'test_result.json' file\n" );
+			exit(1);
+		}
+		fprintf(res_file,
+			"{" \
+			"\"benchmark\": \"%s\"," \
+			"\"toolchain\": \"%s\"," \
+			"\"hwruntime\": \"%s\"," \
+			"\"board\": \"%s\"," \
+			"\"version\": \"%uaccs %uBS %umhz memport_%u\"," \
+			"\"argv\": \"%d %d %d\"," \
+			"\"exectime\": \"%f\"," \
+			"\"performance\": \"%f\"," \
+			"\"note\": \"datatype %s\"" \
+			"}",
+			"nbody",
+			"ompss-2",
+			FPGA_HWRUNTIME,
+			BOARD,
+			NBODY_NUM_FBLOCK_ACCS, BLOCK_SIZE, FPGA_CLOCK, FPGA_MEMORY_PORT_WIDTH,
+			particles, BLOCK_SIZE, nbody->timesteps,
+			time,
+			throughput,
+			"float"
+		);
+		fclose(res_file);
+	}
 }
 
