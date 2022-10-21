@@ -1,6 +1,6 @@
 # Compilers
-CC=gcc
-MCC=fpgacc
+CC=$(CROSS_COMPILE)gcc
+MCC=$(CROSS_COMPILE)fpgacc
 
 # Nbody parameters
 BIGO?=N2
