@@ -29,7 +29,7 @@ else
   mv ${PROG_NAME}_ait/${PROG_NAME}.xtasks.config $OUT_DIR/xtasks.config
 
   printf "{\"benchmark\": \"${PROG_NAME}\", " >>$RES_FILE
-  printf "\"toolchain\": \"ompss\", " >>$RES_FILE
+  printf "\"toolchain\": \"ompss-2\", " >>$RES_FILE
   printf "\"hwruntime\": \"${FPGA_HWRUNTIME}\", " >>$RES_FILE
   printf "\"board\": \"${BOARD}\", " >>$RES_FILE
   printf "\"builder\": \"${CI_NODE}\", " >>$RES_FILE
