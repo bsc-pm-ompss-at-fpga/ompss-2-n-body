@@ -60,5 +60,3 @@ else
   done
   printf "\"},\n" >>$RES_FILE
 fi
-
-

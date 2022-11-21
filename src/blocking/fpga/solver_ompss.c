@@ -182,6 +182,7 @@ void nbody_stats(const nbody_t *nbody, const nbody_conf_t *conf, double time)
 			"\"hwruntime\": \"%s\"," \
 			"\"board\": \"%s\"," \
 			"\"version\": \"%uaccs %uBS %umhz memport_%u\"," \
+			"\"exectype\": \"%s\"," \
 			"\"argv\": \"%d %d %d\"," \
 			"\"exectime\": \"%f\"," \
 			"\"performance\": \"%f\"," \
@@ -192,6 +193,7 @@ void nbody_stats(const nbody_t *nbody, const nbody_conf_t *conf, double time)
 			FPGA_HWRUNTIME,
 			BOARD,
 			NBODY_NUM_FBLOCK_ACCS, BLOCK_SIZE, FPGA_CLOCK, FPGA_MEMORY_PORT_WIDTH,
+			getenv("RUNTIME_MODE"),
 			particles, BLOCK_SIZE, nbody->timesteps,
 			time,
 			throughput,
