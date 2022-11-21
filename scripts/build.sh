@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+BUILD_TARGET=$1
+
 if [ "$BOARD" == "" ]; then
   echo "BOARD environment variable not defined"
   exit 1
@@ -17,7 +19,7 @@ RES_FILE=$(pwd -P)/resources_results.json
 make clean
 mkdir -p $OUT_DIR
 
-if [ "$1" == "binary" ]; then
+if [ "$BUILD_TARGET" == "binary" ]; then
   #Only build the binaries
   make nbody_ompss.N2.${NBODY_BLOCK_SIZE}.exe
   mv nbody_ompss.N2.${NBODY_BLOCK_SIZE}.exe $OUT_DIR
