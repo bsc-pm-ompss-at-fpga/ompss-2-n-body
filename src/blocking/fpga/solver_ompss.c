@@ -167,8 +167,6 @@ void nbody_stats(const nbody_t *nbody, const nbody_conf_t *conf, double time)
 		);
 	}
 	if (conf->stats_file) {
-		double throughput = (double)particles * (double)particles / 1.0E9;
-		throughput = throughput * (double)nbody->timesteps / nbody->timesteps;
 		//Create the JSON result file
 		FILE *res_file = fopen("test_result.json", "w+");
 		if (res_file == NULL) {
@@ -196,7 +194,7 @@ void nbody_stats(const nbody_t *nbody, const nbody_conf_t *conf, double time)
 			getenv("RUNTIME_MODE"),
 			particles, BLOCK_SIZE, nbody->timesteps,
 			time,
-			throughput,
+			nbody_compute_throughput(particles, nbody->timesteps, time),
 			"float"
 		);
 		fclose(res_file);
