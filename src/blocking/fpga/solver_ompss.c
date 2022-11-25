@@ -97,10 +97,8 @@ void calculate_forces_block(float *x, float *y, float *z,
 			const float distance_squared = diff_x * diff_x + diff_y * diff_y + diff_z * diff_z;
 			const float distance = sqrtf(distance_squared);
 
-			float force = 0.0f;
-			if (distance_squared != 0.0f) {
-				force = (mass1[j] / (distance_squared * distance)) * weight2[i];
-			}
+			const float force_ = (mass1[j] / (distance_squared * distance)) * weight2[i];
+			const float force = distance_squared == 0.f ? 0.f : force_;
 
 			x[j] += force * diff_x;
 			y[j] += force * diff_y;
