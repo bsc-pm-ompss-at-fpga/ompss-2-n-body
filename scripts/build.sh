@@ -9,7 +9,8 @@ elif [ "$FPGA_HWRUNTIME" == "" ]; then
   echo "FPGA_HWRUNTIME environment variable not defined"
   exit 1
 elif [ "$FPGA_CLOCK" == "" ]; then
-  exit 1
+  echo "FPGA_CLOCK environment variable not defined. Using default: 100"
+  FPGA_CLOCK=${FPGA_CLOCK:-100}
 fi
 
 PROG_NAME=nbody
@@ -23,10 +24,18 @@ if [ "$BUILD_TARGET" == "binary" ]; then
   #Only build the binaries
   make nbody_ompss.N2.${NBODY_BLOCK_SIZE}.exe
   mv nbody_ompss.N2.${NBODY_BLOCK_SIZE}.exe $OUT_DIR
+elif [ "$BUILD_TARGET" == "design" ]; then
+  #Only generate the design
+  make design-p
+
+  #Remove OUT_DIR directory since we are not generating output products
+  rm -rf $OUT_DIR
 else
   make bitstream-p
 
-  mv ${PROG_NAME}_ait/${PROG_NAME}.bin $OUT_DIR/bitstream.bin
+  if [ -e ${PROG_NAME}_ait/${PROG_NAME}.bin ] ; then
+    mv ${PROG_NAME}_ait/${PROG_NAME}.bin $OUT_DIR/bitstream.bin
+  fi
   mv ${PROG_NAME}_ait/${PROG_NAME}.bit $OUT_DIR/bitstream.bit
   mv ${PROG_NAME}_ait/${PROG_NAME}.xtasks.config $OUT_DIR/xtasks.config
 

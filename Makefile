@@ -31,6 +31,10 @@ ifdef INTERCONNECT_REGSLICE
 	FPGA_LINKER_FLAGS_ += --Wf,--interconnect_regslice,$(INTERCONNECT_REGSLICE)
 endif
 
+ifdef FPGA_MEMORY_PORT_WIDTH
+	MCCFLAGS += --variable=fpga_memory_port_width:$(FPGA_MEMORY_PORT_WIDTH) --variable=fpga_check_limits_memory_port:0
+endif
+
 SMP_SOURCES=                           \
     src/common/common.c                \
     src/blocking/common/common_utils.c \
@@ -45,8 +49,19 @@ all: $(PROGS)
 nbody_ompss.$(BIGO).$(BS).exe: $(SMP_SOURCES) src/blocking/fpga/solver_ompss.c
 	$(MCC) $(CPPFLAGS) $(MCCFLAGS) -o $@ $^ $(LDFLAGS)
 
+design-p: $(SMP_SOURCES) src/blocking/fpga/solver_ompss.c
+	$(eval TMPFILE := $(shell mktemp))
+	$(MCC) $(CPPFLAGS) $(MCCFLAGS) --bitstream-generation $(FPGA_LINKER_FLAGS_) \
+		--Wf,--to_step=design \
+		$^ -o $(TMPFILE) $(LDFLAGS)
+	rm $(TMPFILE)
+
 bitstream-p: $(SMP_SOURCES) src/blocking/fpga/solver_ompss.c
-	$(MCC) $(CPPFLAGS) $(MCCFLAGS) $(FPGA_LINKER_FLAGS_) --bitstream-generation --variable=fpga_memory_port_width:$(FPGA_MEMORY_PORT_WIDTH) --variable=fpga_check_limits_memory_port:0 -o $(shell mktemp) $^ $(LDFLAGS)
+	$(eval TMPFILE := $(shell mktemp))
+	$(MCC) $(CPPFLAGS) $(MCCFLAGS) --bitstream-generation $(FPGA_LINKER_FLAGS_) \
+		$^ -o $(TMPFILE) $(LDFLAGS)
+	rm $(TMPFILE)
 
 clean:
-	rm -f *.o *.exe fpgacc_* *_auto_mcxx.cpp
+	rm -f *.o *.exe fpgacc_* *_auto_mcxx.cpp *_ompss.cpp ait_*.json
+	rm -fr $(PROGRAM_)_ait
