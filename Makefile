@@ -25,7 +25,7 @@ MCCFLAGS=--ompss-2 --fpga $(CFLAGS) --Wn,-O3,-std=gnu11
 # Linker flags
 LDFLAGS=-lrt -lm
 
-FPGA_LINKER_FLAGS_ =--Wf,--name=nbody,--board=$(BOARD),-c=$(FPGA_CLOCK),--hwruntime=$(FPGA_HWRUNTIME),--interconnect_opt=performance,--max_deps_per_task=3,--max_args_per_task=11,--max_copies_per_task=11,--picos_tm_size=32,--picos_dm_size=102,--picos_vm_size=102
+FPGA_LINKER_FLAGS_ =--Wf,--name=nbody,--board=$(BOARD),-c=$(FPGA_CLOCK),--interconnect_opt=performance,--max_deps_per_task=3,--max_args_per_task=11,--max_copies_per_task=11,--picos_tm_size=32,--picos_dm_size=102,--picos_vm_size=102
 
 ifdef INTERCONNECT_REGSLICE
 	FPGA_LINKER_FLAGS_ += --Wf,--interconnect_regslice,$(INTERCONNECT_REGSLICE)
