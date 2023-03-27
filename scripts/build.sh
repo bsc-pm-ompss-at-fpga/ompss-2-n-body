@@ -17,6 +17,7 @@ PROG_NAME=nbody
 OUT_DIR=$(pwd -P)/build
 RES_FILE=$(pwd -P)/resources_results.json
 
+# Cleanup
 make clean
 mkdir -p $OUT_DIR
 
@@ -26,7 +27,7 @@ if [ "$BUILD_TARGET" == "binary" ]; then
   mv nbody_ompss.N2.${NBODY_BLOCK_SIZE}.exe $OUT_DIR
 elif [ "$BUILD_TARGET" == "design" ]; then
   #Only generate the design
-  make design-p
+  make design-p design-i design-d
 
   #Remove OUT_DIR directory since we are not generating output products
   rm -rf $OUT_DIR

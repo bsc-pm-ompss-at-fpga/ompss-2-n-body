@@ -23,7 +23,7 @@ CFLAGS=-O3 -std=gnu11
 MCCFLAGS=--ompss-2 --fpga $(CFLAGS) --Wn,-O3,-std=gnu11
 
 # Linker flags
-LDFLAGS=-lrt -lm
+LDFLAGS_ = $(LDFLAGS) -lrt -lm
 
 FPGA_LINKER_FLAGS_ =--Wf,--name=nbody,--board=$(BOARD),-c=$(FPGA_CLOCK),--interconnect_opt=performance,--max_deps_per_task=3,--max_args_per_task=11,--max_copies_per_task=11,--picos_tm_size=32,--picos_dm_size=102,--picos_vm_size=102
 
@@ -47,19 +47,19 @@ PROGS=                                \
 all: $(PROGS)
 
 nbody_ompss.$(BIGO).$(BS).exe: $(SMP_SOURCES) src/blocking/fpga/solver_ompss.c
-	$(MCC) $(CPPFLAGS) $(MCCFLAGS) -o $@ $^ $(LDFLAGS)
+	$(MCC) $(CPPFLAGS) $(MCCFLAGS) -o $@ $^ $(LDFLAGS_)
 
 design-p: $(SMP_SOURCES) src/blocking/fpga/solver_ompss.c
 	$(eval TMPFILE := $(shell mktemp))
 	$(MCC) $(CPPFLAGS) $(MCCFLAGS) --bitstream-generation $(FPGA_LINKER_FLAGS_) \
 		--Wf,--to_step=design \
-		$^ -o $(TMPFILE) $(LDFLAGS)
+		$^ -o $(TMPFILE) $(LDFLAGS_)
 	rm $(TMPFILE)
 
 bitstream-p: $(SMP_SOURCES) src/blocking/fpga/solver_ompss.c
 	$(eval TMPFILE := $(shell mktemp))
 	$(MCC) $(CPPFLAGS) $(MCCFLAGS) --bitstream-generation $(FPGA_LINKER_FLAGS_) \
-		$^ -o $(TMPFILE) $(LDFLAGS)
+		$^ -o $(TMPFILE) $(LDFLAGS_)
 	rm $(TMPFILE)
 
 clean:
