@@ -39,7 +39,7 @@ int main(int argc, char** argv)
 	forces_block_t *forces = nbody.forces;
 
 	double start = get_time();
-	nbody_solve((float*)particles, (float*)forces, conf.num_blocks, conf.timesteps, conf.time_interval);
+	nbody_solve_fpga((float*)particles, (float*)forces, conf.num_blocks, conf.timesteps, conf.time_interval);
 	#pragma oss taskwait
 	double end = get_time();
 	
