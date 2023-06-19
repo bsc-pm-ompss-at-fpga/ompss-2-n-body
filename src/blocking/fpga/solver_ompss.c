@@ -16,50 +16,30 @@
 
 #include <nanos6/debug.h>
 
-static void calculate_forces(float *forces, const float *particles, const int num_blocks);
-static void update_particles(float *particles, float *forces, const int num_blocks, const float time_interval);
-static void calculate_forces_block(float *x, float *y, float *z,
-	const float *pos_x1, const float *pos_y1, const float *pos_z1, const float *mass1,
-	const float *pos_x2, const float *pos_y2, const float *pos_z2, const float *weight2);
-static void update_particles_block(float *particles, float *forces, const float time_interval);
+//static void calculate_forces(float *forces, const float *particles, const int num_blocks);
+//static void update_particles(float *particles, float *forces, const int num_blocks, const float time_interval);
+//static void calculate_forces_block(float *x, float *y, float *z,
+//	const float *pos_x1, const float *pos_y1, const float *pos_z1, const float *mass1,
+//	const float *pos_x2, const float *pos_y2, const float *pos_z2, const float *weight2);
+//static void update_particles_block(float *particles, float *forces, const float time_interval);
 
-void nbody_solve(float *particles, float *forces, const int num_blocks, const int timesteps, const float time_interval)
-{
-	for (int t = 0; t < timesteps; t++) {
-		calculate_forces(forces, particles, num_blocks);
-		update_particles(particles, forces, num_blocks, time_interval);
-	}
+static const unsigned int NCALCFORCES = NBODY_NCALCFORCES;
+static const unsigned int FPGA_PWIDTH = FPGA_MEMORY_PORT_WIDTH;
 
-	#pragma oss taskwait
-}
+static const unsigned int PARTICLES_FPGABLOCK_POS_X_OFFSET  = 0*BLOCK_SIZE;
+static const unsigned int PARTICLES_FPGABLOCK_POS_Y_OFFSET  = 1*BLOCK_SIZE;
+static const unsigned int PARTICLES_FPGABLOCK_POS_Z_OFFSET  = 2*BLOCK_SIZE;
+static const unsigned int PARTICLES_FPGABLOCK_VEL_X_OFFSET  = 3*BLOCK_SIZE;
+static const unsigned int PARTICLES_FPGABLOCK_VEL_Y_OFFSET  = 4*BLOCK_SIZE;
+static const unsigned int PARTICLES_FPGABLOCK_VEL_Z_OFFSET  = 5*BLOCK_SIZE;
+static const unsigned int PARTICLES_FPGABLOCK_MASS_OFFSET   = 6*BLOCK_SIZE;
+static const unsigned int PARTICLES_FPGABLOCK_WEIGHT_OFFSET = 7*BLOCK_SIZE;
+static const unsigned int PARTICLES_FPGABLOCK_SIZE          = 8*BLOCK_SIZE;
 
-void calculate_forces_N2(float *forces, const float *particles, const int num_blocks)
-{
-#pragma HLS inline
-	for (int i = 0; i < num_blocks; i++) {
-		for (int j = 0; j < num_blocks; j++) {
-			float * forcesTarget = forces + j*FORCE_FPGABLOCK_SIZE;
-			const float * block1 = particles + j*PARTICLES_FPGABLOCK_SIZE;
-			const float * block2 = particles + i*PARTICLES_FPGABLOCK_SIZE;
-
-			calculate_forces_block(
-				forcesTarget + FORCE_FPGABLOCK_X_OFFSET, forcesTarget + FORCE_FPGABLOCK_Y_OFFSET,
-				forcesTarget + FORCE_FPGABLOCK_Z_OFFSET, block1 + PARTICLES_FPGABLOCK_POS_X_OFFSET,
-				block1 + PARTICLES_FPGABLOCK_POS_Y_OFFSET, block1 + PARTICLES_FPGABLOCK_POS_Z_OFFSET,
-				block1 + PARTICLES_FPGABLOCK_MASS_OFFSET, block2 + PARTICLES_FPGABLOCK_POS_X_OFFSET,
-				block2 + PARTICLES_FPGABLOCK_POS_Y_OFFSET, block2 + PARTICLES_FPGABLOCK_POS_Z_OFFSET,
-				block2 + PARTICLES_FPGABLOCK_WEIGHT_OFFSET);
-		}
-	}
-}
-
-void update_particles(float *particles, float *forces, const int num_blocks, const float time_interval)
-{
-#pragma HLS inline
-	for (int i = 0; i < num_blocks; i++) {
-		update_particles_block(particles+i*PARTICLES_FPGABLOCK_SIZE, forces+i*FORCE_FPGABLOCK_SIZE, time_interval);
-	}
-}
+static const unsigned int FORCE_FPGABLOCK_X_OFFSET = 0*BLOCK_SIZE;
+static const unsigned int FORCE_FPGABLOCK_Y_OFFSET = 1*BLOCK_SIZE;
+static const unsigned int FORCE_FPGABLOCK_Z_OFFSET = 2*BLOCK_SIZE;
+static const unsigned int FORCE_FPGABLOCK_SIZE     = 3*BLOCK_SIZE;
 
 #pragma oss task label("calculate_forces_block") \
 	device(fpga) num_instances(FBLOCK_NUM_ACCS) \
@@ -107,6 +87,27 @@ void calculate_forces_block(float *x, float *y, float *z,
 	}
 }
 
+void calculate_forces_N2(float *forces, const float *particles, const int num_blocks)
+{
+#pragma HLS inline
+	for (int i = 0; i < num_blocks; i++) {
+		for (int j = 0; j < num_blocks; j++) {
+			float * forcesTarget = forces + j*FORCE_FPGABLOCK_SIZE;
+			const float * block1 = particles + j*PARTICLES_FPGABLOCK_SIZE;
+			const float * block2 = particles + i*PARTICLES_FPGABLOCK_SIZE;
+
+			calculate_forces_block(
+				forcesTarget + FORCE_FPGABLOCK_X_OFFSET, forcesTarget + FORCE_FPGABLOCK_Y_OFFSET,
+				forcesTarget + FORCE_FPGABLOCK_Z_OFFSET, block1 + PARTICLES_FPGABLOCK_POS_X_OFFSET,
+				block1 + PARTICLES_FPGABLOCK_POS_Y_OFFSET, block1 + PARTICLES_FPGABLOCK_POS_Z_OFFSET,
+				block1 + PARTICLES_FPGABLOCK_MASS_OFFSET, block2 + PARTICLES_FPGABLOCK_POS_X_OFFSET,
+				block2 + PARTICLES_FPGABLOCK_POS_Y_OFFSET, block2 + PARTICLES_FPGABLOCK_POS_Z_OFFSET,
+				block2 + PARTICLES_FPGABLOCK_WEIGHT_OFFSET);
+		}
+	}
+}
+
+
 #pragma oss task device(fpga) copy_deps inout([PARTICLES_FPGABLOCK_SIZE]particles, [FORCE_FPGABLOCK_SIZE]forces) label("update_particles_block")
 void update_particles_block(float *particles, float *forces, const float time_interval)
 {
@@ -151,6 +152,14 @@ void update_particles_block(float *particles, float *forces, const float time_in
 	}
 }
 
+void update_particles(float *particles, float *forces, const int num_blocks, const float time_interval)
+{
+#pragma HLS inline
+	for (int i = 0; i < num_blocks; i++) {
+		update_particles_block(particles+i*PARTICLES_FPGABLOCK_SIZE, forces+i*FORCE_FPGABLOCK_SIZE, time_interval);
+	}
+}
+
 void nbody_stats(const nbody_t *nbody, const nbody_conf_t *conf, double time)
 {
 	int particles = nbody->num_blocks * BLOCK_SIZE;
@@ -166,6 +175,7 @@ void nbody_stats(const nbody_t *nbody, const nbody_conf_t *conf, double time)
 	}
 	if (conf->stats_file) {
 		//Create the JSON result file
+        (void)fclose;
 		FILE *res_file = fopen("test_result.json", "w+");
 		if (res_file == NULL) {
 			printf( "Cannot open 'test_result.json' file\n" );
@@ -197,5 +207,20 @@ void nbody_stats(const nbody_t *nbody, const nbody_conf_t *conf, double time)
 		);
 		fclose(res_file);
 	}
+}
+
+#pragma oss task device(fpga) inout([num_blocks*PARTICLES_FPGABLOCK_SIZE]particles, [num_blocks*FORCE_FPGABLOCK_SIZE]forces)
+void nbody_solve(float *particles, float *forces, const int num_blocks, const int timesteps, const float time_interval)
+{
+	for (int t = 0; t < timesteps; t++) {
+		calculate_forces(forces, particles, num_blocks);
+		update_particles(particles, forces, num_blocks, time_interval);
+	}
+
+	#pragma oss taskwait
+}
+
+void nbody_solve_fpga(float *particles, float *forces, const int num_blocks, const int timesteps, const float time_interval) {
+	nbody_solve(particles, forces, num_blocks, timesteps, time_interval);
 }
 
