@@ -23,8 +23,8 @@ mkdir -p $OUT_DIR
 
 if [ "$BUILD_TARGET" == "binary" ]; then
   #Only build the binaries
-  make nbody_ompss.N2.${NBODY_BLOCK_SIZE}.exe
-  mv nbody_ompss.N2.${NBODY_BLOCK_SIZE}.exe $OUT_DIR
+  make ${PROG_NAME}-p ${PROG_NAME}-i ${PROG_NAME}-d
+  mv ${PROG_NAME}-p ${PROG_NAME}-i ${PROG_NAME}-d $OUT_DIR
 elif [ "$BUILD_TARGET" == "design" ]; then
   #Only generate the design
   make design-p design-i design-d
