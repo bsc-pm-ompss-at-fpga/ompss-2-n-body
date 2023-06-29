@@ -43,10 +43,9 @@ static const unsigned int FORCE_FPGABLOCK_SIZE     = 3*BLOCK_SIZE;
 
 #pragma oss task label("calculate_forces_block") \
 	device(fpga) num_instances(FBLOCK_NUM_ACCS) \
-	inout(x[0]) in(pos_x1[0], pos_x2[0]) \
-	copy_inout([BLOCK_SIZE_C]x, [BLOCK_SIZE_C]y, [BLOCK_SIZE_C]z) \
-	copy_in([BLOCK_SIZE_C]pos_x1, [BLOCK_SIZE_C]pos_y1, [BLOCK_SIZE_C]pos_z1, [BLOCK_SIZE_C]mass1) \
-	copy_in([BLOCK_SIZE_C]pos_x2, [BLOCK_SIZE_C]pos_y2, [BLOCK_SIZE_C]pos_z2, [BLOCK_SIZE_C]weight2)
+	inout([BLOCK_SIZE_C]x, [BLOCK_SIZE_C]y, [BLOCK_SIZE_C]z) \
+	in([BLOCK_SIZE_C]pos_x1, [BLOCK_SIZE_C]pos_y1, [BLOCK_SIZE_C]pos_z1, [BLOCK_SIZE_C]mass1) \
+	in([BLOCK_SIZE_C]pos_x2, [BLOCK_SIZE_C]pos_y2, [BLOCK_SIZE_C]pos_z2, [BLOCK_SIZE_C]weight2)
 void calculate_forces_block(float *x, float *y, float *z,
 	const float *pos_x1, const float *pos_y1, const float *pos_z1, const float *mass1,
 	const float *pos_x2, const float *pos_y2, const float *pos_z2, const float *weight2)
@@ -209,7 +208,6 @@ void nbody_stats(const nbody_t *nbody, const nbody_conf_t *conf, double time)
 	}
 }
 
-#pragma oss task device(fpga) inout([num_blocks*PARTICLES_FPGABLOCK_SIZE]particles, [num_blocks*FORCE_FPGABLOCK_SIZE]forces)
 void nbody_solve(float *particles, float *forces, const int num_blocks, const int timesteps, const float time_interval)
 {
 	for (int t = 0; t < timesteps; t++) {
